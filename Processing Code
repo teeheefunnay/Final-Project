@@ -1,0 +1,126 @@
+import processing.serial.*;
+
+import twitter4j.conf.*;
+import twitter4j.*;
+import twitter4j.auth.*;
+import twitter4j.api.*;
+import java.util.*;
+
+Twitter twitter;
+String []searchString=new String[50];
+
+//String searchString = "Happy";
+List<Status> tweets;
+int count=0;
+int happy=0;
+int sad=0;
+int love=0;
+int mad=0;
+int currentTweet;
+int tweetpoint=1;
+Serial myPort;
+
+void setup()
+{
+  searchString[1] = "happy+OR+sad+OR+mad+OR+love";
+  String portName = Serial.list()[2]; //change the 0 to a 1 or 2 etc. to match your port
+  myPort = new Serial(this, portName, 9600);
+   size(800,600);
+
+    ConfigurationBuilder cb = new ConfigurationBuilder();
+    cb.setOAuthConsumerKey("2dLMuHBRjGqN38J2icpu4XInW");
+    cb.setOAuthConsumerSecret("Dk0YEg8yuUgGZgJES46OZ2eyBPCEUkSw5BeQUEPk35f0iZsXpB");
+    cb.setOAuthAccessToken("92095119-ANeghNAMUcaIOF0icHSoRciDevbnsdSY90gtQYzeA");
+    cb.setOAuthAccessTokenSecret("Cmhsoaw7YGopAoFcQZBIAUr0RyyDjjsfBFtnSXz7QREVv");
+
+    TwitterFactory tf = new TwitterFactory(cb.build());
+
+    twitter = tf.getInstance();
+
+    getNewTweets();
+
+    currentTweet = 0;
+
+    thread("refreshTweets");
+}
+
+void draw()
+{
+    fill(0, 120);
+    rect(0, 0, width, height);
+
+    currentTweet = currentTweet + 1;
+
+    if (currentTweet >= tweets.size())
+    {
+        currentTweet = 0;
+    }
+
+    Status status = tweets.get(currentTweet);
+    String str = status.getText();
+    love = str.indexOf("love");
+    mad = str.indexOf("mad");
+    happy= str.indexOf("happy");
+    sad = str.indexOf("sad");
+    //if (status.getText()==
+    fill(200);
+    if(love>0)
+    {
+      myPort.write('1');
+      text("love", random(width), random(height), 300, 200);
+    //text(status.getText(), random(width), random(height), 300, 200);
+    //text(str(love), random(width), random(height), 300, 200);
+    }
+    if(mad>0)
+    {
+      myPort.write('2');
+      text("mad", random(width), random(height), 300, 200);
+    //text(status.getText(), random(width), random(height), 300, 200);
+    //text(str(mad), random(width), random(height), 300, 200);
+    }
+    if(happy>0)
+    {
+      myPort.write('3');
+      text("happy", random(width), random(height), 300, 200);
+    //text(status.getText(), random(width), random(height), 300, 200);
+    //text(str(happy), random(width), random(height), 300, 200);
+    }
+    if(sad>0)
+    {
+      myPort.write('4');
+      text("sad", random(width), random(height), 300, 200);
+    //text(status.getText(), random(width), random(height), 300, 200);
+    //text(str(sad), random(width), random(height), 300, 200);
+    }
+    //text(status.getText(), random(width), random(height), 300, 200);
+    delay(1000);
+}
+
+void getNewTweets()
+{
+    try 
+    {
+        Query query = new Query(searchString[tweetpoint]);
+
+        QueryResult result = twitter.search(query);
+
+        tweets = result.getTweets();
+    } 
+    catch (TwitterException te) 
+    {
+        System.out.println("Failed to search tweets: " + te.getMessage());
+        System.exit(-1);
+    } 
+}
+
+void refreshTweets()
+{
+    while (true)
+    {
+        getNewTweets();
+
+        println("Updated Tweets"); 
+
+        delay(30000);
+    }
+}
